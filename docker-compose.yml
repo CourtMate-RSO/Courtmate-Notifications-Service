@@ -1,0 +1,31 @@
+
+services:
+  notification-service:
+    build:
+      context: .
+      dockerfile: dockerfile
+    ports:
+      - "8003:8003"
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - BREVO_API_KEY=${BREVO_API_KEY}
+      - FROM_EMAIL=${FROM_EMAIL}
+      - FROM_NAME=${FROM_NAME}
+      - INTERNAL_SERVICE_KEY=${INTERNAL_SERVICE_KEY}
+      - API_TITLE=${API_TITLE}
+      - API_VERSION=${API_VERSION}
+      - ENV=${ENV}
+    env_file:
+      - .env
+    volumes:
+      # Mount the app directory for hot-reloading during development
+      - ./app:/app/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8003 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
