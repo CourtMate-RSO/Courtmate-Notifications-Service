@@ -17,24 +17,26 @@ BREVO_API_KEY = os.getenv("BREVO_API_KEY")
 FROM_EMAIL = os.getenv("FROM_EMAIL", "noreply@courtmate.com")
 FROM_NAME = os.getenv("FROM_NAME", "CourtMate")
 
-# Validate required environment variables
-def validate_env_vars():
-    """Validate that all required environment variables are set"""
+
+# Log all environment variables and warn if any are missing, but do not exit
+def log_env_vars():
+    """Log all relevant environment variables and warn if any are missing"""
     required_vars = {
         "SUPABASE_URL": SUPABASE_URL,
         "SUPABASE_SERVICE_ROLE_KEY": SUPABASE_SERVICE_ROLE_KEY,
         "SUPABASE_ANON_KEY": SUPABASE_ANON_KEY,
         "BREVO_API_KEY": BREVO_API_KEY,
     }
-    
+    print("\n--- Notification Service Environment Variables ---")
+    for key, value in required_vars.items():
+        print(f"{key}: {'<set>' if value else '<MISSING>'}")
+    print("------------------------------------------------\n")
     missing = [key for key, value in required_vars.items() if not value]
-    
     if missing:
-        print(f"❌ ERROR: Missing required environment variables: {', '.join(missing)}")
-        print("Please check your .env file and ensure all required variables are set.")
-        sys.exit(1)
+        print(f"⚠️  WARNING: Missing environment variables: {', '.join(missing)}")
+        print("The service will start, but may not function correctly until all are set.")
 
-validate_env_vars()
+log_env_vars()
 
 
 

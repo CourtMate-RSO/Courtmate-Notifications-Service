@@ -64,3 +64,57 @@ View upcoming reservations that need reminders (for monitoring/debugging).
   "reservations": [...]
 }
 ```
+
+# Deployment to AKS (Azure Kubernetes Service)
+
+## Prerequisites
+- AKS cluster (testCluster, resource group RSO)
+- Azure Container Registry (courtmateacr.azurecr.io)
+- Supabase credentials stored as Kubernetes secret `supabase-secrets`
+- Helm installed locally
+- Docker installed locally
+
+## Manual Deployment Steps
+
+1. **Build and push Docker image:**
+   ```sh
+   docker build -t courtmateacr.azurecr.io/notifications-service:latest Courtmate-Notifications-Service
+   az acr login --name courtmateacr
+   docker push courtmateacr.azurecr.io/notifications-service:latest
+   ```
+
+2. **Create Kubernetes secret for Supabase:**
+   ```sh
+   kubectl create secret generic supabase-secrets \
+     --from-literal=SUPABASE_URL=<your-url> \
+     --from-literal=SUPABASE_KEY=<your-key> \
+     --from-literal=SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key> \
+     --from-literal=SUPABASE_JWT_SECRET=<your-jwt-secret> \
+     --namespace myapp
+   ```
+
+3. **Deploy with Helm:**
+   ```sh
+   helm upgrade --install notifications-service chart/notifications-service \
+     --namespace myapp --create-namespace
+   ```
+
+4. **Verify deployment:**
+   ```sh
+   kubectl get pods --namespace myapp
+   kubectl get svc --namespace myapp
+   kubectl get ingress --namespace myapp
+   kubectl logs <notifications-service-pod> --namespace myapp
+   ```
+
+## Ingress Path
+- `/api/notifications(/|$)(.*)` (rewrites to service root)
+
+## Health Endpoint
+- `/health` (used for readiness/liveness probes)
+
+## CI/CD Deployment (GitHub Actions)
+- Automated deployment on push to `main` via `.github/workflows/deploy-notifications-service.yml`
+- Uses OIDC authentication (preferred) or service principal
+- Updates image tag to commit SHA
+- Deploys with Helm and verifies rollout

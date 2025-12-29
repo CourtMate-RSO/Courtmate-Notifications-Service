@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "notification-service.fullname" . }}
+  labels:
+    app: {{ include "notification-service.name" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "notification-service.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "notification-service.name" . }}
+    spec:
+      containers:
+        - name: notification-service
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          env:
+            - name: SUPABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: notification-service-secrets
+                  key: SUPABASE_URL
+            - name: SUPABASE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: notification-service-secrets
+                  key: SUPABASE_KEY
+            - name: SUPABASE_ANON_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: notification-service-secrets
+                  key: SUPABASE_ANON_KEY
+            - name: SUPABASE_SERVICE_ROLE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: notification-service-secrets
+                  key: SUPABASE_SERVICE_ROLE_KEY
+            - name: SUPABASE_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: notification-service-secrets
+                  key: SUPABASE_JWT_SECRET
+            - name: BREVO_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: notification-service-secrets
+                  key: BREVO_API_KEY
+            - name: FROM_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: notification-service-secrets
+                  key: FROM_EMAIL
+            - name: FROM_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: notification-service-secrets
+                  key: FROM_NAME
+            - name: INTERNAL_SERVICE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: notification-service-secrets
+                  key: INTERNAL_SERVICE_KEY
+            - name: ENV
+              valueFrom:
+                secretKeyRef:
+                  name: notification-service-secrets
+                  key: ENV
+            - name: API_TITLE
+              valueFrom:
+                secretKeyRef:
+                  name: notification-service-secrets
+                  key: API_TITLE
+            - name: API_VERSION
+              valueFrom:
+                secretKeyRef:
+                  name: notification-service-secrets
+                  key: API_VERSION
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources: {{- toYaml .Values.resources | nindent 12 }}
