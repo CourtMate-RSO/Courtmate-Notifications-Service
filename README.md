@@ -13,57 +13,36 @@ Email notification service for court reservations, handling confirmation emails 
 
 ### Health Check
 ```http
-GET /health
+GET /api/notifications/health
 ```
 
-### Send Confirmation Email
+### Send Notification
 ```http
-POST /api/v1/notifications/send-confirmation?reservation_id={uuid}
+POST /api/notifications/send
 ```
 
-Send a confirmation email for a reservation. This should be called by the Booking Service immediately after creating a reservation.
+Send an email notification (internal use). The endpoint expects a JSON body with the notification details. Example request body:
+
+```json
+{
+  "user_id": "123e4567-e89b-12d3-a456-426614174000",
+  "type": "booking_confirmation",
+  "email": "user@example.com",
+  "data": {
+    "reservation_id": "123e4567-e89b-12d3-a456-426614174000",
+    "start_time": "2026-01-15T14:00:00Z"
+  }
+}
+```
 
 **Response:**
 ```json
 {
-  "message": "Confirmation email sent successfully",
-  "reservation_id": "uuid",
-  "email": "user@example.com"
+  "message": "Notification sent"
 }
 ```
 
-### Send Reminder Email
-```http
-POST /api/v1/notifications/send-reminder?reservation_id={uuid}
-```
-
-Manually send a reminder email for a reservation. (Normally handled automatically by the scheduler)
-
-**Response:**
-```json
-{
-  "message": "Reminder email sent successfully",
-  "reservation_id": "uuid",
-  "email": "user@example.com"
-}
-```
-
-### Get Upcoming Reminders
-```http
-GET /api/v1/notifications/upcoming-reminders
-```
-
-View upcoming reservations that need reminders (for monitoring/debugging).
-
-**Response:**
-```json
-{
-  "window_start": "2025-11-15T10:00:00Z",
-  "window_end": "2025-11-15T10:20:00Z",
-  "count": 2,
-  "reservations": [...]
-}
-```
+Note: the OpenAPI specification exposes only `/api/notifications/health` and `/api/notifications/send`; previously documented v1-style endpoints (e.g. `/api/v1/notifications/send-confirmation`) have been consolidated into this single `/api/notifications/send` endpoint that accepts a `type` field to distinguish confirmation, cancellation or reminder emails. The background scheduler and any monitoring endpoints may still exist locally but are not part of the public OpenAPI contract.
 
 # Deployment to AKS (Azure Kubernetes Service)
 
@@ -80,9 +59,3 @@ View upcoming reservations that need reminders (for monitoring/debugging).
 
 ## Health Endpoint
 - `/health` (used for readiness/liveness probes)
-
-## CI/CD Deployment (GitHub Actions)
-- Automated deployment on push to `main` via `.github/workflows/deploy-notifications-service.yml`
-- Uses OIDC authentication (preferred) or service principal
-- Updates image tag to commit SHA
-- Deploys with Helm and verifies rollout
