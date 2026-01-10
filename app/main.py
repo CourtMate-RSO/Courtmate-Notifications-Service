@@ -49,6 +49,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Prometheus metrics instrumentation
+from prometheus_fastapi_instrumentator import Instrumentator
+Instrumentor().instrument(app).expose(app, endpoint="/metrics")
+
 app.include_router(notifications_router, prefix=NOTIFICATIONS_PREFIX)
 
 

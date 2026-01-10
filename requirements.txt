@@ -8,3 +8,5 @@ python-dotenv
 apscheduler
 httpx
 brevo-python
+prometheus-client
+prometheus-fastapi-instrumentator
