@@ -1,22 +1,27 @@
 replicaCount: 1
 image:
-  repository: courtmateacr.azurecr.io/notification-service
+  repository: courtmate603fc8acr.azurecr.io/notification-service
   tag: "latest"
   pullPolicy: Always
 service:
   type: ClusterIP
-  port: 8003
+  port: 8000
 resources: {}
 ingress:
   enabled: true
   className: "nginx"
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  host: "courtmate.duckdns.org"
   hosts:
     - paths:
         - path: /api/notifications(/|$)(.*)
           pathType: ImplementationSpecific
-  tls: []
+  tls:
+    - secretName: notification-service-tls
+      hosts:
+        - courtmate.duckdns.org
 env:
   SUPABASE_URL: ""
   SUPABASE_KEY: ""
